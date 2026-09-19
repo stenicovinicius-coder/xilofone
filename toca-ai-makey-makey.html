@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toca Aí! — instrumentos indígenas e xilofone com Makey Makey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3E9D8; --bg-panel:#FFFFFF; --bg-panel-alt:#EADFC7;
+    --accent-urucum:#B23A24; --accent-ochre:#B8802A; --accent-green:#3F6B3E; --accent-turq:#1F7A73;
+    --text:#2A1E14; --text-dim:#6E5C48; --border:#DFCDA8;
+    --shadow:0 14px 34px -14px rgba(60,40,20,0.25);
+    --radius:22px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#201510; --bg-panel:#2C1F17; --bg-panel-alt:#3A291D;
+      --accent-urucum:#E1573B; --accent-ochre:#E8B65B; --accent-green:#6FA36C; --accent-turq:#3FB0A6;
+      --text:#F5E9D8; --text-dim:#C9B79B; --border:#4A3626;
+      --shadow:0 16px 40px -14px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#201510; --bg-panel:#2C1F17; --bg-panel-alt:#3A291D;
+    --accent-urucum:#E1573B; --accent-ochre:#E8B65B; --accent-green:#6FA36C; --accent-turq:#3FB0A6;
+    --text:#F5E9D8; --text-dim:#C9B79B; --border:#4A3626;
+    --shadow:0 16px 40px -14px rgba(0,0,0,0.6);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Nunito',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  h1,h2,h3{font-family:'Fredoka',system-ui,sans-serif; margin:0;}
+  p{margin:0;}
+  button{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--accent-turq); outline-offset:2px;}
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  section{padding:60px 0;}
+  .eyebrow{color:var(--accent-urucum); font-weight:800; font-size:0.85rem; margin-bottom:6px;}
+  .section-title{font-size:1.9rem; margin-bottom:10px; line-height:1.15;}
+  .section-lede{color:var(--text-dim); font-size:1rem; line-height:1.55; max-width:62ch; margin-bottom:26px;}
+  .btn{border:none; cursor:pointer; border-radius:14px; font-weight:800; padding:12px 22px; font-size:0.95rem; transition:transform .15s ease;}
+  .btn:hover{transform:translateY(-2px);}
+  .btn:disabled{opacity:0.45; cursor:default; transform:none;}
+  .btn-primary{background:linear-gradient(135deg, var(--accent-urucum), var(--accent-ochre)); color:#fff; box-shadow:0 10px 22px -10px color-mix(in srgb, var(--accent-urucum) 65%, transparent);}
+  .btn-ghost{background:var(--bg-panel-alt); color:var(--text); border:1.5px solid var(--border);}
+  .card{background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);}
+  .reveal-el{opacity:0; transform:translateY(24px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal-el.in-view{opacity:1; transform:translateY(0);}
+
+  /* NAV */
+  .topnav{position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 18px; background:color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); flex-wrap:wrap;}
+  .nav-brand{display:flex; align-items:center; gap:8px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.05rem;}
+  .nav-modes{display:flex; gap:6px; background:var(--bg-panel-alt); border:1px solid var(--border); border-radius:999px; padding:3px;}
+  .mode-pill{border:none; background:none; cursor:pointer; padding:6px 13px; border-radius:999px; font-weight:800; font-size:0.8rem; color:var(--text-dim);}
+  .mode-pill.active{background:var(--accent-urucum); color:#fff;}
+  .nav-tools{display:flex; gap:6px;}
+  .icon-btn{background:var(--bg-panel-alt); border:1px solid var(--border); border-radius:999px; width:36px; height:36px; cursor:pointer; font-size:1.05rem; display:flex; align-items:center; justify-content:center;}
+  @media (max-width:760px){ .nav-brand{display:none;} }
+
+  /* HERO */
+  .hero{padding:56px 0 20px; text-align:center;}
+  .hero h1{font-size:clamp(1.9rem,4.6vw,2.9rem); line-height:1.12; margin-bottom:14px;}
+  .hero .lede{color:var(--text-dim); max-width:60ch; margin:0 auto 28px; font-size:1.02rem; line-height:1.6;}
+  .mode-switch{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:20px;}
+  .mode-btn-big{
+    border:2px solid var(--border); background:var(--bg-panel); border-radius:18px; padding:16px 26px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px; min-width:170px; transition:transform .15s, border-color .15s, box-shadow .15s;
+  }
+  .mode-btn-big span.big-emoji{font-size:1.8rem;}
+  .mode-btn-big span.mb-title{font-weight:800; font-size:1rem;}
+  .mode-btn-big span.mb-sub{font-size:0.74rem; color:var(--text-dim);}
+  .mode-btn-big:hover{transform:translateY(-2px);}
+  .mode-btn-big.active{border-color:var(--accent-urucum); box-shadow:0 10px 22px -12px color-mix(in srgb, var(--accent-urucum) 55%, transparent); background:color-mix(in srgb, var(--accent-urucum) 8%, var(--bg-panel));}
+  .objects-row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; font-size:0.8rem; color:var(--text-dim); font-weight:700;}
+  .objects-row span{background:var(--bg-panel-alt); border:1px solid var(--border); border-radius:999px; padding:6px 12px;}
+
+  /* COMO CONECTAR */
+  .step-list{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;}
+  .step-item{padding:18px; display:flex; flex-direction:column; gap:8px;}
+  .step-num{width:30px; height:30px; border-radius:50%; background:var(--accent-urucum); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:0.9rem;}
+  .step-item p{font-size:0.86rem; color:var(--text-dim); line-height:1.5;}
+  .step-item strong{color:var(--text); display:block; margin-bottom:2px; font-size:0.95rem;}
+
+  /* KEYMAP */
+  .keymap-wrap{display:flex; justify-content:center; margin-bottom:8px;}
+  .keymap{display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .kcross{display:grid; grid-template-columns:repeat(3, 84px); grid-template-rows:repeat(3, 84px); gap:8px;}
+  .kbottom{display:flex; gap:8px; width:100%;}
+  .keycell{
+    background:var(--bg-panel-alt); border:2px solid var(--border); border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    cursor:pointer; padding:6px; text-align:center; touch-action:none; user-select:none;
+    transition:transform .08s ease, box-shadow .15s ease;
+  }
+  .keycell.empty{visibility:hidden;}
+  .keycell .kc-key{font-size:0.68rem; font-weight:900; color:var(--text-dim);}
+  .keycell .kc-icon{width:30px; height:30px;}
+  .keycell .kc-name{font-size:0.6rem; font-weight:800; line-height:1.15; max-width:70px;}
+  .keycell.active{transform:scale(0.94); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent-urucum) 45%, transparent) inset;}
+  .k-up{grid-column:2; grid-row:1;}
+  .k-left{grid-column:1; grid-row:2;}
+  .k-right{grid-column:3; grid-row:2;}
+  .k-down{grid-column:2; grid-row:3;}
+  .k-space{flex:1; height:60px;}
+
+  /* CARDS */
+  .items-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin-top:34px;}
+  .item-card{padding:16px; display:flex; flex-direction:column; gap:8px;}
+  .item-card .ic-top{display:flex; align-items:center; gap:10px;}
+  .item-card .ic-icon{width:44px; height:44px; flex:0 0 auto;}
+  .item-card h4{font-size:1.02rem;}
+  .item-card .ic-key{font-size:0.7rem; font-weight:800; color:#fff; background:var(--accent-urucum); border-radius:999px; padding:3px 9px; display:inline-block; margin-top:2px;}
+  .item-card p.ic-desc{font-size:0.83rem; color:var(--text-dim); line-height:1.5;}
+  .item-card .ic-fact{font-size:0.78rem; color:var(--text-dim); border-left:3px solid var(--accent-ochre); padding-left:10px; line-height:1.5;}
+  .item-card .ic-fact strong{color:var(--text);}
+  .remap-btn{align-self:flex-start; background:var(--bg-panel-alt); border:1px solid var(--border); border-radius:999px; padding:6px 12px; font-size:0.74rem; font-weight:800; cursor:pointer; color:var(--text);}
+  .remap-btn:hover{border-color:var(--accent-turq);}
+
+  /* REMAP BANNER */
+  .remap-banner{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%) translateY(-140%); z-index:80;
+    background:var(--accent-urucum); color:#fff; padding:12px 20px; border-radius:14px; font-weight:800; font-size:0.88rem;
+    display:flex; align-items:center; gap:14px; box-shadow:0 12px 28px -10px rgba(0,0,0,0.4); transition:transform .25s ease;
+  }
+  .remap-banner.show{transform:translateX(-50%) translateY(0);}
+  .remap-banner button{background:rgba(255,255,255,0.25); border:none; color:#fff; border-radius:8px; padding:5px 10px; font-weight:800; cursor:pointer; font-size:0.78rem;}
+
+  /* GRAVAÇÃO */
+  .rec-bar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:26px 0 0; padding:14px 16px;}
+  .rec-status{font-size:0.82rem; font-weight:800; color:var(--text-dim); margin-left:auto;}
+  .rec-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--accent-urucum); margin-right:6px; animation:none;}
+  .rec-dot.live{animation:blink 1s step-start infinite;}
+  @keyframes blink{ 50%{opacity:0.2;} }
+
+  footer.site-footer{text-align:center; padding:36px 20px 60px; color:var(--text-dim); font-size:0.78rem; line-height:1.6;}
+
+  @media (max-width:480px){
+    .kcross{grid-template-columns:repeat(3,68px); grid-template-rows:repeat(3,68px);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .reveal-el{opacity:1; transform:none; transition:none;}
+    .rec-dot.live{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-brand">🪘 Toca Aí!</div>
+  <div class="nav-modes">
+    <button class="mode-pill" data-mode="indigenas">🪘 Indígena</button>
+    <button class="mode-pill" data-mode="xilofone">🎼 Xilofone</button>
+  </div>
+  <div class="nav-tools">
+    <button class="icon-btn" id="themeToggle" title="Dia / noite">🌙</button>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="eyebrow">Makey Makey + brasilidades</p>
+  <h1>Toque instrumentos com uma banana, uma folha ou um pouco de água</h1>
+  <p class="lede">Conecte objetos do dia a dia ao Makey Makey e transforme-os em instrumentos indígenas brasileiros — ou em um xilofone afinado. Escolha o modo abaixo para começar.</p>
+  <div class="mode-switch">
+    <button class="mode-btn-big" data-mode="indigenas">
+      <span class="big-emoji">🪘</span>
+      <span class="mb-title">Instrumentos indígenas</span>
+      <span class="mb-sub">maracá, trocano, flauta e buzina</span>
+    </button>
+    <button class="mode-btn-big" data-mode="xilofone">
+      <span class="big-emoji">🎼</span>
+      <span class="mb-title">Xilofone</span>
+      <span class="mb-sub">5 notas para tocar qualquer melodia</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="wrap reveal-el">
+    <p class="eyebrow">antes de tocar</p>
+    <h2 class="section-title">Como conectar o Makey Makey</h2>
+    <p class="section-lede">Não tem certeza de como montar o circuito? Siga os passos abaixo — e se não tiver o dispositivo em mãos, dá para tocar tudo clicando ou usando o teclado do computador mesmo.</p>
+    <div class="step-list">
+      <div class="card step-item">
+        <span class="step-num">1</span>
+        <strong>Ligue na USB</strong>
+        <p>Conecte o Makey Makey ao computador usando o cabo USB.</p>
+      </div>
+      <div class="card step-item">
+        <span class="step-num">2</span>
+        <strong>Vista o fio-terra</strong>
+        <p>Prenda um fio-jacaré na entrada "EARTH" e segure a outra ponta (ou use uma pulseira de papel alumínio).</p>
+      </div>
+      <div class="card step-item">
+        <span class="step-num">3</span>
+        <strong>Ligue os objetos</strong>
+        <p>Prenda outros fios-jacaré nas entradas de seta/espaço e conecte cada um a um objeto condutor diferente.</p>
+      </div>
+      <div class="card step-item">
+        <span class="step-num">4</span>
+        <strong>Toque!</strong>
+        <p>Segure o fio-terra com uma mão e toque o objeto com a outra — o circuito fecha e o som aparece na tela.</p>
+      </div>
+    </div>
+    <p class="objects-row" style="margin-top:16px;">
+      <span>🍌 banana</span><span>🍇 uva</span><span>💧 água</span><span>✏️ grafite do lápis</span><span>🍃 folha</span><span>🪙 moeda</span><span>🧑 sua mão</span>
+    </p>
+  </section>
+
+  <section id="tocar" class="wrap">
+    <p class="eyebrow reveal-el" id="modeEyebrow">modo: instrumentos indígenas</p>
+    <h2 class="section-title reveal-el" id="modeTitle">Toque aqui</h2>
+    <p class="section-lede reveal-el" id="modeLede">Cada tecla abaixo representa uma entrada do Makey Makey. Toque no objeto conectado a ela — ou clique direto na tela.</p>
+
+    <div class="keymap-wrap reveal-el">
+      <div class="keymap" id="keymap"></div>
+    </div>
+
+    <div class="card rec-bar reveal-el">
+      <button class="btn btn-primary" id="recBtn">⏺ Gravar</button>
+      <button class="btn btn-ghost" id="playBtn" disabled>▶️ Tocar gravação</button>
+      <button class="btn btn-ghost" id="clearBtn" disabled>🗑️ Limpar</button>
+      <span class="rec-status" id="recStatus"><span class="rec-dot" id="recDot"></span>pronto para gravar</span>
+    </div>
+
+    <div class="items-grid reveal-el" id="itemsGrid"></div>
+  </section>
+</main>
+
+<div class="remap-banner" id="remapBanner">
+  <span id="remapText">Pressione a tecla desejada…</span>
+  <button id="remapCancel">cancelar</button>
+</div>
+
+<footer class="site-footer">
+  Conteúdo educativo produzido para uma mostra cultural sobre brasilidades — um recorte simplificado da diversidade de instrumentos dos povos indígenas do Brasil, que é muito maior do que cabe aqui. 🪘
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const $=(s,ctx)=> (ctx||document).querySelector(s);
+  const $$=(s,ctx)=> Array.from((ctx||document).querySelectorAll(s));
+
+  /* ================= THEME ================= */
+  const themeToggle = $('#themeToggle');
+  function currentIsDark(){
+    const explicit = document.documentElement.getAttribute('data-theme');
+    if(explicit) return explicit==='dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function refreshThemeIcon(){ themeToggle.textContent = currentIsDark() ? '☀️' : '🌙'; }
+  themeToggle.addEventListener('click', function(){
+    document.documentElement.setAttribute('data-theme', currentIsDark() ? 'light' : 'dark');
+    refreshThemeIcon();
+  });
+  refreshThemeIcon();
+
+  /* ================= ÁUDIO ================= */
+  let actx=null, masterGain=null, noiseBuffer=null;
+  function ensureAudio(){
+    if(actx){ if(actx.state==='suspended') actx.resume(); return; }
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    masterGain = actx.createGain(); masterGain.gain.value=0.9;
+    const comp = actx.createDynamicsCompressor();
+    masterGain.connect(comp).connect(actx.destination);
+    const len = actx.sampleRate;
+    noiseBuffer = actx.createBuffer(1,len,actx.sampleRate);
+    const d = noiseBuffer.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  }
+  function noiseBurst(freq,q,peak,decay){
+    const s=actx.createBufferSource(); s.buffer=noiseBuffer;
+    const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=freq; bp.Q.value=q;
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0.0001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(peak, actx.currentTime+0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+decay);
+    s.connect(bp).connect(g).connect(masterGain);
+    s.start(); s.stop(actx.currentTime+decay+0.03);
+  }
+
+  const activeNodes = {};
+
+  function startShake(id, p){
+    const iv = setInterval(function(){ noiseBurst(p.freq||550, 1.3, p.vol||0.4, 0.09); }, p.rate||90);
+    activeNodes[id] = { interval: iv };
+  }
+  function stopShake(id){
+    const n = activeNodes[id]; if(!n) return;
+    clearInterval(n.interval); delete activeNodes[id];
+  }
+  function scheduleScrapeTick(id, p){
+    const n = activeNodes[id]; if(!n || n.stopped) return;
+    noiseBurst(p.freq||1700, 2.4, p.vol||0.32, 0.05);
+    n.timeout = setTimeout(function(){ scheduleScrapeTick(id,p); }, 60+Math.random()*80);
+  }
+  function startScrape(id, p){
+    activeNodes[id] = { stopped:false };
+    scheduleScrapeTick(id, p);
+  }
+  function stopScrape(id){
+    const n = activeNodes[id]; if(!n) return;
+    n.stopped = true; clearTimeout(n.timeout); delete activeNodes[id];
+  }
+  function startHorn(id, p){
+    const o1=actx.createOscillator(); o1.type='sawtooth'; o1.frequency.value=p.freq;
+    const o2=actx.createOscillator(); o2.type='sine'; o2.frequency.value=p.freq*1.004;
+    const lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=5;
+    const lfoGain=actx.createGain(); lfoGain.gain.value=p.vibrato||5;
+    lfo.connect(lfoGain); lfoGain.connect(o1.frequency); lfoGain.connect(o2.frequency);
+    const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=p.bright||1100;
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0.0001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(p.vol||0.32, actx.currentTime+0.14);
+    o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(masterGain);
+    o1.start(); o2.start(); lfo.start();
+    activeNodes[id] = { o1:o1, o2:o2, lfo:lfo, g:g };
+  }
+  function stopHorn(id){
+    const n = activeNodes[id]; if(!n) return;
+    const now = actx.currentTime;
+    n.g.gain.cancelScheduledValues(now);
+    n.g.gain.setValueAtTime(Math.max(n.g.gain.value,0.0001), now);
+    n.g.gain.exponentialRampToValueAtTime(0.0001, now+0.22);
+    setTimeout(function(){ try{ n.o1.stop(); n.o2.stop(); n.lfo.stop(); }catch(e){} }, 260);
+    delete activeNodes[id];
+  }
+  function startFlute(id, p){
+    const o=actx.createOscillator(); o.type='sine'; o.frequency.value=p.freq;
+    const noiseSrc=actx.createBufferSource(); noiseSrc.buffer=noiseBuffer; noiseSrc.loop=true;
+    const nf=actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=p.freq*2.2; nf.Q.value=1;
+    const ng=actx.createGain(); ng.gain.value=p.breath||0.05;
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0.0001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(p.vol||0.28, actx.currentTime+0.09);
+    o.connect(g); noiseSrc.connect(nf).connect(ng).connect(g); g.connect(masterGain);
+    o.start(); noiseSrc.start();
+    activeNodes[id] = { o:o, noiseSrc:noiseSrc, g:g };
+  }
+  function stopFlute(id){
+    const n = activeNodes[id]; if(!n) return;
+    const now = actx.currentTime;
+    n.g.gain.cancelScheduledValues(now);
+    n.g.gain.setValueAtTime(Math.max(n.g.gain.value,0.0001), now);
+    n.g.gain.exponentialRampToValueAtTime(0.0001, now+0.16);
+    setTimeout(function(){ try{ n.o.stop(); n.noiseSrc.stop(); }catch(e){} }, 200);
+    delete activeNodes[id];
+  }
+  function playDrum(p){
+    const o=actx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime((p.freq||75)*1.8, actx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(Math.max(28,(p.freq||75)*0.6), actx.currentTime+0.22);
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0.0001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.9, actx.currentTime+0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+0.5);
+    o.connect(g).connect(masterGain);
+    o.start(); o.stop(actx.currentTime+0.55);
+  }
+  function playXylo(freq){
+    const now=actx.currentTime;
+    const o=actx.createOscillator(); o.type='sine'; o.frequency.value=freq;
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.55, now+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+0.9);
+    o.connect(g).connect(masterGain);
+    o.start(now); o.stop(now+0.95);
+    const o2=actx.createOscillator(); o2.type='triangle'; o2.frequency.value=freq*3.93;
+    const g2=actx.createGain();
+    g2.gain.setValueAtTime(0.0001, now);
+    g2.gain.exponentialRampToValueAtTime(0.18, now+0.004);
+    g2.gain.exponentialRampToValueAtTime(0.0001, now+0.28);
+    o2.connect(g2).connect(masterGain);
+    o2.start(now); o2.stop(now+0.32);
+    const s=actx.createBufferSource(); s.buffer=noiseBuffer;
+    const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=4000;
+    const gN=actx.createGain();
+    gN.gain.setValueAtTime(0.0001, now);
+    gN.gain.exponentialRampToValueAtTime(0.12, now+0.002);
+    gN.gain.exponentialRampToValueAtTime(0.0001, now+0.03);
+    s.connect(hp).connect(gN).connect(masterGain);
+    s.start(now); s.stop(now+0.04);
+  }
+  function stopAllSustained(){
+    Object.keys(activeNodes).forEach(function(id){
+      const it = getItemById(id);
+      if(!it) { delete activeNodes[id]; return; }
+      if(it.type==='shake') stopShake(id);
+      else if(it.type==='horn') stopHorn(id);
+      else if(it.type==='flute') stopFlute(id);
+      else if(it.type==='scrape') stopScrape(id);
+    });
+  }
+  window.addEventListener('blur', stopAllSustained);
+
+  /* ================= ÍCONES SVG ================= */
+  function itemIcon(id, color){
+    switch(id){
+      case 'maraca':
+      case 'mbaraka':
+        return '<svg viewBox="0 0 60 60"><ellipse cx="32" cy="24" rx="16" ry="13" fill="'+color+'"/>' +
+          '<circle cx="26" cy="20" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="36" cy="22" r="1.6" fill="rgba(255,255,255,0.6)"/><circle cx="30" cy="29" r="1.8" fill="rgba(255,255,255,0.6)"/>' +
+          '<rect x="14" y="34" width="7" height="20" rx="3" fill="var(--accent-ochre)" transform="rotate(-25 17 44)"/></svg>';
+      case 'trocano':
+        return '<svg viewBox="0 0 60 60"><rect x="18" y="8" width="24" height="44" rx="9" fill="'+color+'"/>' +
+          '<rect x="29" y="12" width="2.4" height="36" rx="1.2" fill="rgba(0,0,0,0.35)"/></svg>';
+      case 'buzina':
+        return '<svg viewBox="0 0 60 60"><path d="M10,30 L38,18 C46,15 52,20 52,28 C52,36 46,41 38,38 L10,30 Z" fill="'+color+'"/></svg>';
+      case 'flauta':
+        return '<svg viewBox="0 0 60 60"><rect x="8" y="27" width="44" height="7" rx="3.5" fill="'+color+'"/>' +
+          '<circle cx="20" cy="30.5" r="1.6" fill="rgba(255,255,255,0.7)"/><circle cx="28" cy="30.5" r="1.6" fill="rgba(255,255,255,0.7)"/><circle cx="36" cy="30.5" r="1.6" fill="rgba(255,255,255,0.7)"/><circle cx="44" cy="30.5" r="1.6" fill="rgba(255,255,255,0.7)"/></svg>';
+      case 'chocalho':
+        return '<svg viewBox="0 0 60 60"><path d="M8,44 Q30,50 52,44" stroke="var(--accent-ochre)" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+          '<circle cx="14" cy="42" r="5" fill="'+color+'"/><circle cx="26" cy="47" r="5" fill="'+color+'"/><circle cx="38" cy="47" r="5" fill="'+color+'"/><circle cx="48" cy="42" r="5" fill="'+color+'"/></svg>';
+      case 'recoreco':
+        return '<svg viewBox="0 0 60 60"><rect x="8" y="22" width="44" height="16" rx="6" fill="'+color+'"/>' +
+          '<rect x="14" y="22" width="2.2" height="16" fill="rgba(0,0,0,0.25)"/><rect x="21" y="22" width="2.2" height="16" fill="rgba(0,0,0,0.25)"/><rect x="28" y="22" width="2.2" height="16" fill="rgba(0,0,0,0.25)"/><rect x="35" y="22" width="2.2" height="16" fill="rgba(0,0,0,0.25)"/><rect x="42" y="22" width="2.2" height="16" fill="rgba(0,0,0,0.25)"/>' +
+          '<rect x="30" y="6" width="5" height="26" rx="2.5" fill="var(--accent-ochre)" transform="rotate(35 32 19)"/></svg>';
+      case 'apito':
+        return '<svg viewBox="0 0 60 60"><path d="M30,10 C42,10 48,22 44,34 C41,43 30,46 24,40 C16,33 15,20 22,14 C24.5,11.7 27.2,10 30,10 Z" fill="'+color+'"/>' +
+          '<circle cx="30" cy="28" r="2" fill="rgba(0,0,0,0.25)"/></svg>';
+      default:
+        return '<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="18" fill="'+color+'"/></svg>';
+    }
+  }
+  function xyloIcon(color, label){
+    return '<svg viewBox="0 0 60 60">' +
+      '<rect x="6" y="30" width="48" height="14" rx="6" fill="rgba(0,0,0,0.15)"/>' +
+      '<rect x="6" y="24" width="48" height="14" rx="6" fill="'+color+'"/>' +
+      '<text x="30" y="34" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="Nunito, sans-serif">'+label+'</text>' +
+      '</svg>';
+  }
+
+  /* ================= DADOS ================= */
+  const KEY_SLOTS = ['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+  const KEY_LABELS = { Space:'␣ espaço', ArrowUp:'↑', ArrowDown:'↓', ArrowLeft:'←', ArrowRight:'→' };
+
+  const MODES = {
+    indigenas: {
+      title:'Toque aqui', eyebrow:'modo: instrumentos indígenas',
+      lede:'Cada tecla abaixo representa uma entrada do Makey Makey, ligada a um instrumento indígena diferente. Segure para instrumentos de sopro, ou toque rápido para os de percussão.',
+      order: ['maraca','trocano','flauta','buzina','recoreco'],
+      items: [
+        { id:'maraca', name:'Maracá', type:'shake', color:'#B23A24', params:{freq:520, rate:95, vol:0.45},
+          desc:'Chocalho feito com uma cabaça seca cheia de sementes, preso a um cabo de madeira. Um dos instrumentos indígenas mais conhecidos do Brasil.',
+          fact:'Para muitos povos, o som do maracá tem sentido sagrado — em rituais, ele ajuda a guiar cantos e a "conversar" com espíritos.' },
+        { id:'trocano', name:'Trocano', type:'drum', color:'#8A5A34', params:{freq:70},
+          desc:'Grande tambor feito de um tronco de árvore oco, usado por povos do Alto Xingu, como os Kamayurá e os Wauja, em rituais importantes.',
+          fact:'Para esses povos, o trocano pode representar o corpo de uma grande sucuri — por isso é tratado com muito cuidado e respeito.' },
+        { id:'buzina', name:'Buzina de taquara', type:'horn', color:'#B8802A', params:{freq:300, bright:1300, vol:0.3},
+          desc:'Trombeta feita de taquara (um tipo de bambu), soprada para produzir sons fortes em rituais, festas ou para se comunicar a distância.',
+          fact:'Cada povo indígena tem seu próprio jeito de construir e tocar as buzinas de taquara — os sons variam bastante entre eles.' },
+        { id:'flauta', name:'Flauta de taquara', type:'flute', color:'#3F6B3E', params:{freq:440, vol:0.28, breath:0.05},
+          desc:'Flauta feita de bambu, tocada em festas e no dia a dia por diferentes povos indígenas brasileiros.',
+          fact:'Muitos povos têm flautas ligadas a mitos sobre espíritos da floresta e dos rios.' },
+        { id:'recoreco', name:'Reco-reco', type:'scrape', color:'#355E8C', params:{freq:1700, vol:0.3},
+          desc:'Instrumento de bambu ou madeira com ranhuras, tocado ao passar uma vareta sobre elas, criando um som raspado e ritmado.',
+          fact:'Tem raízes indígenas e também é usado até hoje no samba e no carnaval brasileiro.' }
+      ]
+    },
+    xilofone: {
+      title:'Toque sua melodia', eyebrow:'modo: xilofone',
+      lede:'Cinco notas de uma escala pentatônica — qualquer combinação que você tocar vai soar bem! Ótimo para tocar junto com várias pessoas ao mesmo tempo.',
+      order: ['do1','re1','mi1','sol1','la1'],
+      items: [
+        { id:'do1', name:'Dó', type:'xylo', color:'#E1573B', params:{freq:261.63}, desc:'Primeira nota da escala.', fact:'' },
+        { id:'re1', name:'Ré', type:'xylo', color:'#E8963B', params:{freq:293.66}, desc:'Segunda nota da escala.', fact:'' },
+        { id:'mi1', name:'Mi', type:'xylo', color:'#E8C93B', params:{freq:329.63}, desc:'Terceira nota da escala.', fact:'' },
+        { id:'sol1', name:'Sol', type:'xylo', color:'#6FA36C', params:{freq:392.00}, desc:'Quarta nota da escala.', fact:'' },
+        { id:'la1', name:'Lá', type:'xylo', color:'#3FA6B0', params:{freq:440.00}, desc:'Quinta nota da escala.', fact:'' }
+      ]
+    }
+  };
+
+  let currentMode = 'indigenas';
+  function getItemById(id){
+    const m = MODES[currentMode];
+    return m.items.find(function(it){ return it.id===id; });
+  }
+
+  /* ================= RENDER ================= */
+  const keymapEl = $('#keymap');
+  const itemsGridEl = $('#itemsGrid');
+
+  function buildKeymapSkeleton(){
+    keymapEl.innerHTML =
+      '<div class="kcross">'+
+        '<div class="keycell empty"></div><div class="keycell" data-slot="ArrowUp"></div><div class="keycell empty"></div>'+
+        '<div class="keycell" data-slot="ArrowLeft"></div><div class="keycell empty"></div><div class="keycell" data-slot="ArrowRight"></div>'+
+        '<div class="keycell empty"></div><div class="keycell" data-slot="ArrowDown"></div><div class="keycell empty"></div>'+
+      '</div>'+
+      '<div class="kbottom">'+
+        '<div class="keycell k-space" data-slot="Space"></div>'+
+      '</div>';
+  }
+  buildKeymapSkeleton();
+
+  function iconFor(item){
+    return item.type==='xylo' ? xyloIcon(item.color, item.name.replace(' agudo','′')) : itemIcon(item.id, item.color);
+  }
+
+  function renderAll(){
+    const m = MODES[currentMode];
+    $('#modeEyebrow').textContent = m.eyebrow;
+    $('#modeTitle').textContent = m.title;
+    $('#modeLede').textContent = m.lede;
+
+    KEY_SLOTS.forEach(function(slot, idx){
+      const cell = $('.keycell[data-slot="'+slot+'"]', keymapEl);
+      const itemId = m.order[idx];
+      const item = getItemById(itemId);
+      cell.dataset.item = itemId;
+      cell.innerHTML = '<span class="kc-key">'+KEY_LABELS[slot]+'</span><span class="kc-icon">'+iconFor(item)+'</span><span class="kc-name">'+item.name+'</span>';
+    });
+
+    itemsGridEl.innerHTML='';
+    m.items.forEach(function(item){
+      const slotIdx = m.order.indexOf(item.id);
+      const slot = KEY_SLOTS[slotIdx];
+      const card = document.createElement('div');
+      card.className='item-card card';
+      card.dataset.item=item.id;
+      card.innerHTML =
+        '<div class="ic-top"><span class="ic-icon">'+iconFor(item)+'</span><div><h4>'+item.name+'</h4><span class="ic-key" data-keylabel>'+KEY_LABELS[slot]+'</span></div></div>'+
+        (item.desc ? '<p class="ic-desc">'+item.desc+'</p>' : '')+
+        (item.fact ? '<p class="ic-fact"><strong>Curiosidade:</strong> '+item.fact+'</p>' : '')+
+        '<button class="remap-btn" data-remap="'+item.id+'">🔧 trocar tecla</button>';
+      itemsGridEl.appendChild(card);
+    });
+
+    $$('.keycell:not(.empty)', keymapEl).forEach(function(cell){
+      cell.addEventListener('pointerdown', onCellDown);
+      cell.addEventListener('pointerup', onCellUp);
+      cell.addEventListener('pointerleave', onCellUp);
+      cell.addEventListener('pointercancel', onCellUp);
+    });
+    $$('.remap-btn', itemsGridEl).forEach(function(btn){
+      btn.addEventListener('click', function(){ startRemap(btn.dataset.remap); });
+    });
+  }
+
+  function onCellDown(e){ e.preventDefault(); ensureAudio(); const id=e.currentTarget.dataset.item; triggerStart(id); }
+  function onCellUp(e){ const id=e.currentTarget.dataset.item; triggerStop(id); }
+
+  function setActiveVisual(id, on){
+    $$('[data-item="'+id+'"]').forEach(function(el){ el.classList.toggle('active', on); });
+  }
+  function pulseVisual(id, ms){
+    setActiveVisual(id, true);
+    setTimeout(function(){ setActiveVisual(id, false); }, ms);
+  }
+
+  function triggerStart(id){
+    const item = getItemById(id); if(!item) return;
+    ensureAudio();
+    if(item.type==='xylo'){
+      playXylo(item.params.freq);
+      pulseVisual(id, 340);
+    } else if(item.type==='drum'){
+      playDrum(item.params);
+      pulseVisual(id, 260);
+    } else {
+      if(activeNodes[id]) return; // já soando
+      setActiveVisual(id, true);
+      if(item.type==='shake') startShake(id, item.params);
+      else if(item.type==='horn') startHorn(id, item.params);
+      else if(item.type==='flute') startFlute(id, item.params);
+      else if(item.type==='scrape') startScrape(id, item.params);
+    }
+    if(recording){ recordedEvents.push({ id:id, action:'start', t: performance.now()-recordStartTime, mode:currentMode }); }
+  }
+  function triggerStop(id){
+    const item = getItemById(id); if(!item) return;
+    if(item.type==='shake'){ stopShake(id); setActiveVisual(id,false); }
+    else if(item.type==='horn'){ stopHorn(id); setActiveVisual(id,false); }
+    else if(item.type==='flute'){ stopFlute(id); setActiveVisual(id,false); }
+    else if(item.type==='scrape'){ stopScrape(id); setActiveVisual(id,false); }
+    if(recording){ recordedEvents.push({ id:id, action:'stop', t: performance.now()-recordStartTime, mode:currentMode }); }
+  }
+
+  /* ================= TECLADO / MAKEY MAKEY ================= */
+  const heldKeys = {};
+  document.addEventListener('keydown', function(e){
+    if(remapTargetId){
+      e.preventDefault();
+      finishRemap(e.code);
+      return;
+    }
+    const slotIdx = KEY_SLOTS.indexOf(e.code);
+    if(slotIdx===-1) return;
+    e.preventDefault();
+    if(e.repeat) return;
+    heldKeys[e.code]=true;
+    const item = MODES[currentMode].order[slotIdx];
+    triggerStart(item);
+  });
+  document.addEventListener('keyup', function(e){
+    const slotIdx = KEY_SLOTS.indexOf(e.code);
+    if(slotIdx===-1) return;
+    e.preventDefault();
+    delete heldKeys[e.code];
+    const item = MODES[currentMode].order[slotIdx];
+    triggerStop(item);
+  });
+
+  /* ================= REMAPEAMENTO ================= */
+  let remapTargetId=null;
+  const remapBanner=$('#remapBanner');
+  const remapText=$('#remapText');
+  function startRemap(id){
+    remapTargetId=id;
+    const item=getItemById(id);
+    remapText.textContent='Pressione a tecla que vai tocar: '+item.name;
+    remapBanner.classList.add('show');
+  }
+  function finishRemap(code){
+    const item = getItemById(remapTargetId);
+    const targetSlot = KEY_SLOTS.indexOf(code);
+    if(targetSlot===-1){
+      remapText.textContent='Essa tecla não faz parte do mapa. Tente ↑ ↓ ← → espaço, W, A ou S.';
+      setTimeout(function(){ remapBanner.classList.remove('show'); remapTargetId=null; }, 1400);
+      return;
+    }
+    const order = MODES[currentMode].order;
+    const sourceSlot = order.indexOf(remapTargetId);
+    const temp = order[targetSlot];
+    order[targetSlot] = remapTargetId;
+    order[sourceSlot] = temp;
+    remapTargetId=null;
+    remapBanner.classList.remove('show');
+    renderAll();
+  }
+  $('#remapCancel').addEventListener('click', function(){ remapTargetId=null; remapBanner.classList.remove('show'); });
+
+  /* ================= MODOS ================= */
+  function setMode(name){
+    if(name===currentMode) return;
+    stopAllSustained();
+    currentMode = name;
+    $$('[data-mode]').forEach(function(el){ el.classList.toggle('active', el.dataset.mode===name); });
+    renderAll();
+  }
+  $$('[data-mode]').forEach(function(el){
+    el.addEventListener('click', function(){ setMode(el.dataset.mode); });
+  });
+  $$('[data-mode]').forEach(function(el){ if(el.dataset.mode==='indigenas') el.classList.add('active'); });
+
+  /* ================= GRAVAÇÃO ================= */
+  let recording=false, recordedEvents=[], recordStartTime=0, isPlayingBack=false, recordedMode='indigenas';
+  const recBtn=$('#recBtn'), playBtn=$('#playBtn'), clearBtn=$('#clearBtn'), recStatus=$('#recStatus'), recDot=$('#recDot');
+  const MAX_RECORD_MS = 30000;
+  let recordSafetyTimer=null;
+
+  recBtn.addEventListener('click', function(){
+    if(!recording){
+      ensureAudio();
+      recording=true; recordedEvents=[]; recordStartTime=performance.now(); recordedMode=currentMode;
+      recBtn.textContent='⏹ Parar';
+      recDot.classList.add('live');
+      recStatus.innerHTML='<span class="rec-dot live" id="recDot"></span>gravando…';
+      playBtn.disabled=true; clearBtn.disabled=true;
+      recordSafetyTimer=setTimeout(function(){ if(recording) recBtn.click(); }, MAX_RECORD_MS);
+    } else {
+      recording=false;
+      clearTimeout(recordSafetyTimer);
+      recBtn.textContent='⏺ Gravar';
+      recStatus.textContent = recordedEvents.length ? recordedEvents.length+' toques gravados' : 'nenhum toque gravado';
+      playBtn.disabled = recordedEvents.length===0;
+      clearBtn.disabled = recordedEvents.length===0;
+    }
+  });
+
+  playBtn.addEventListener('click', function(){
+    if(isPlayingBack || recordedEvents.length===0) return;
+    isPlayingBack=true;
+    recBtn.disabled=true; playBtn.disabled=true; clearBtn.disabled=true;
+    if(currentMode!==recordedMode) setMode(recordedMode);
+    recStatus.textContent='tocando a gravação…';
+    let maxT=0;
+    recordedEvents.forEach(function(ev){
+      maxT=Math.max(maxT, ev.t);
+      setTimeout(function(){
+        if(ev.action==='start') triggerStart(ev.id); else triggerStop(ev.id);
+      }, ev.t);
+    });
+    setTimeout(function(){
+      isPlayingBack=false;
+      recBtn.disabled=false; playBtn.disabled=false; clearBtn.disabled=false;
+      recStatus.textContent = recordedEvents.length+' toques gravados';
+    }, maxT+400);
+  });
+
+  clearBtn.addEventListener('click', function(){
+    recordedEvents=[];
+    playBtn.disabled=true; clearBtn.disabled=true;
+    recStatus.textContent='pronto para gravar';
+  });
+
+  /* ================= INÍCIO ================= */
+  renderAll();
+
+  const observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){ entry.target.classList.add('in-view'); observer.unobserve(entry.target); }
+    });
+  }, { threshold:0.12 });
+  $$('.reveal-el').forEach(function(el){ observer.observe(el); });
+
+})();
+</script>
+</body>
+</html>
